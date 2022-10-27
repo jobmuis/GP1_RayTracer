@@ -104,9 +104,7 @@ namespace dae {
 
 	Matrix Matrix::CreateTranslation(float x, float y, float z)
 	{
-		//todo W1
-		assert(false && "Not Implemented Yet");
-		return {};
+		return CreateTranslation(Vector3{ x, y, z });
 	}
 
 	Matrix Matrix::CreateTranslation(const Vector3& t)
@@ -116,30 +114,40 @@ namespace dae {
 
 	Matrix Matrix::CreateRotationX(float pitch)
 	{
-		//todo W1
-		assert(false && "Not Implemented Yet");
-		return {};
+		const float pitchRadians{ pitch * TO_RADIANS };
+		const Matrix rotXMatrix{
+			Vector3::UnitX, 
+			Vector4{0, cosf(pitchRadians), sinf(pitchRadians), 0},
+			Vector4{0, -sinf(pitchRadians), cosf(pitchRadians), 0}, 
+			Vector4{0.f, 0.f, 0.f, 1.f} };
+		return rotXMatrix;
 	}
 
 	Matrix Matrix::CreateRotationY(float yaw)
 	{
-		//todo W1
-		assert(false && "Not Implemented Yet");
-		return {};
+		const float yawRadians{ yaw * TO_RADIANS };
+		const Matrix rotYMatrix{ 
+			Vector4{cosf(yawRadians), 0, -sinf(yawRadians), 0}, 
+			Vector3::UnitY,
+			Vector4{sinf(yawRadians), 0, cosf(yawRadians), 0.f}, 
+			Vector4{0.f, 0.f, 0.f, 1.f} };
+		return rotYMatrix;
 	}
 
 	Matrix Matrix::CreateRotationZ(float roll)
 	{
-		//todo W1
-		assert(false && "Not Implemented Yet");
-		return {};
+		const float rollRadians{ roll * TO_RADIANS };
+		const Matrix rotZMatrix{ 
+			Vector4{cosf(rollRadians), sinf(rollRadians), 0.f, 0.f}, 
+			Vector4{-sinf(rollRadians), cosf(rollRadians), 0.f, 0.f},
+			Vector3::UnitZ, 
+			Vector4{0.f, 0.f, 0.f, 1.f} };
+		return rotZMatrix;
 	}
 
 	Matrix Matrix::CreateRotation(const Vector3& r)
 	{
-		//todo W1
-		assert(false && "Not Implemented Yet");
-		return {};
+		return CreateRotationX(r.x) * CreateRotationY(r.y) * CreateRotationZ(r.z);
 	}
 
 	Matrix Matrix::CreateRotation(float pitch, float yaw, float roll)
@@ -149,9 +157,12 @@ namespace dae {
 
 	Matrix Matrix::CreateScale(float sx, float sy, float sz)
 	{
-		//todo W1
-		assert(false && "Not Implemented Yet");
-		return {};
+		const Matrix scaleMatrix{ 
+			Vector3{sx, 0.f, 0.f}, 
+			Vector3{0.f, sy, 0.f}, 
+			Vector3{0.f, 0.f, sz}, 
+			Vector4{0.f, 0.f, 0.f, 1.f} };
+		return scaleMatrix;
 	}
 
 	Matrix Matrix::CreateScale(const Vector3& s)

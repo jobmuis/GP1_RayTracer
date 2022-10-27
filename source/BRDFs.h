@@ -13,16 +13,16 @@ namespace dae
 		 */
 		static ColorRGB Lambert(float kd, const ColorRGB& cd)
 		{
-			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			ColorRGB rho{ cd * kd };
+			const ColorRGB lambertDiffuseColor{ rho / PI };
+			return lambertDiffuseColor;
 		}
 
 		static ColorRGB Lambert(const ColorRGB& kd, const ColorRGB& cd)
 		{
-			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			ColorRGB rho{ cd * kd };
+			const ColorRGB lambertDiffuseColor{ rho / PI };
+			return lambertDiffuseColor;
 		}
 
 		/**
@@ -36,9 +36,10 @@ namespace dae
 		 */
 		static ColorRGB Phong(float ks, float exp, const Vector3& l, const Vector3& v, const Vector3& n)
 		{
-			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			const Vector3 reflection{ l - 2 * Vector3::Dot(n, l) * n };
+			const float cosAngle{ std::max(0.f, Vector3::Dot(reflection, v)) };
+			const float phongSpecularReflection{ ks * powf(cosAngle, exp) };
+			return ColorRGB{ phongSpecularReflection, phongSpecularReflection, phongSpecularReflection };
 		}
 
 		/**
@@ -50,9 +51,7 @@ namespace dae
 		 */
 		static ColorRGB FresnelFunction_Schlick(const Vector3& h, const Vector3& v, const ColorRGB& f0)
 		{
-			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			return ColorRGB{ f0 + (ColorRGB{1.f, 1.f, 1.f} - f0) * powf(1 - Vector3::Dot(h, v), 5.f)};
 		}
 
 		/**
@@ -64,9 +63,8 @@ namespace dae
 		 */
 		static float NormalDistribution_GGX(const Vector3& n, const Vector3& h, float roughness)
 		{
-			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			const float a{ powf(roughness, 2.f) };
+			return float{ powf(a, 2.f) / (PI * powf(powf(Vector3::Dot(n, h), 2.f) * (powf(a, 2.f) - 1) + 1.f, 2.f)) };
 		}
 
 
@@ -79,9 +77,9 @@ namespace dae
 		 */
 		static float GeometryFunction_SchlickGGX(const Vector3& n, const Vector3& v, float roughness)
 		{
-			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			const float a{ powf(roughness, 2.f) };
+			const float k{ (powf(a + 1.f, 2.f)) / 8.f };
+			return float{ (std::max(0.f, Vector3::Dot(n, v))) / (std::max(0.f, Vector3::Dot(n, v)) * (1.f - k) + k) };
 		}
 
 		/**
@@ -94,9 +92,7 @@ namespace dae
 		 */
 		static float GeometryFunction_Smith(const Vector3& n, const Vector3& v, const Vector3& l, float roughness)
 		{
-			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			return float{ BRDF::GeometryFunction_SchlickGGX(n, v, roughness) * BRDF::GeometryFunction_SchlickGGX(n, l, roughness) };
 		}
 
 	}

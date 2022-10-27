@@ -12,17 +12,6 @@ namespace dae
 		//SPHERE HIT-TESTS
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo W1
-			/*assert(false && "No Implemented Yet!");
-			return false;*/
-			
-			/*Vector3 tc{ sphere.origin.x - ray.direction.x, sphere.origin.y - ray.direction.y, sphere.origin.z - ray.direction.z };
-			float dp{ Vector3::Dot(tc, ray.direction) };
-			float odSquared{ powf(tc.Magnitude(), 2) - powf(dp, 2)};
-			float tca{ sqrtf(powf(sphere.radius, 2) - odSquared)};
-			float t0{ dp - tca };
-			*/
-
 			float A{ Vector3::Dot(ray.direction, ray.direction) };
 			float B{ Vector3::Dot(2 * ray.direction, (ray.origin - sphere.origin)) };
 			float C{ Vector3::Dot(ray.origin - sphere.origin, ray.origin - sphere.origin) - powf(sphere.radius, 2) };
@@ -43,6 +32,7 @@ namespace dae
 					hitRecord.materialIndex = sphere.materialIndex;
 					hitRecord.origin = ray.origin + t * ray.direction;
 					hitRecord.t = t;
+					hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
 					return true;
 				}
 				else
@@ -68,9 +58,6 @@ namespace dae
 		//PLANE HIT-TESTS
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo W1
-			//assert(false && "No Implemented Yet!");
-			//return false;
 
 			float t{ (Vector3::Dot(plane.origin - ray.origin, plane.normal) / Vector3::Dot(ray.direction, plane.normal)) };
 
@@ -80,6 +67,7 @@ namespace dae
 				hitRecord.materialIndex = plane.materialIndex;
 				hitRecord.origin = ray.origin + t * ray.direction;
 				hitRecord.t = t;
+				hitRecord.normal = plane.normal;
 				return true;
 			}
 			else
@@ -99,9 +87,71 @@ namespace dae
 		//TRIANGLE HIT-TESTS
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo W5
-			assert(false && "No Implemented Yet!");
-			return false;
+			//Calculate two sides of triangle
+			//Vector3 a{ triangle.v1 - triangle.v0 }, b{triangle.v2 - triangle.v0};
+			//Get normal of triangle
+			//Vector3 normal{ Vector3::Cross(a, b) };
+			//normal.Normalize();
+
+			//Check if view ray is perpendicular with triangle. If perpendicular, it isn't viewable
+			if (Vector3::Dot(triangle.normal, ray.direction) == 0) return false;
+
+			//Check culling mode
+			if (!ignoreHitRecord)
+			{
+				if (triangle.cullMode == TriangleCullMode::BackFaceCulling)
+				{
+					if (Vector3::Dot(triangle.normal, ray.direction) > 0) return false;
+				}
+				else if (triangle.cullMode == TriangleCullMode::FrontFaceCulling)
+				{
+					if (Vector3::Dot(triangle.normal, ray.direction) < 0) return false;
+				}
+			}
+			//Cull mode is inverted for shadows
+			else
+			{
+				if (triangle.cullMode == TriangleCullMode::BackFaceCulling)
+				{
+					if (Vector3::Dot(triangle.normal, ray.direction) < 0) return false;
+				}
+				else if (triangle.cullMode == TriangleCullMode::FrontFaceCulling)
+				{
+					if (Vector3::Dot(triangle.normal, ray.direction) > 0) return false;
+				}
+			}
+
+			//Calculate t-value
+			Vector3 center{ (triangle.v0 + triangle.v1 + triangle.v2) / 3.f };
+			Vector3 L{ center - ray.origin };
+			float t{ Vector3::Dot(L, triangle.normal) / Vector3::Dot(ray.direction, triangle.normal) };
+
+			//Check if triangle is in range of ray
+			if (t < ray.min || t > ray.max) return false;
+
+			//Calculate intersection point
+			Vector3 intersectPoint{ ray.origin + t * ray.direction };
+
+
+			//Check if intersection point is on inside of triangle (aka to the right of every side)
+			Vector3 edgeA{ triangle.v1 - triangle.v0 };
+			Vector3 pointToSide{ intersectPoint - triangle.v0 };
+			if (Vector3::Dot(triangle.normal, Vector3::Cross(edgeA, pointToSide)) < 0) return false;
+
+			Vector3 edgeB{ triangle.v2 - triangle.v1 };
+			pointToSide = intersectPoint - triangle.v1;
+			if (Vector3::Dot(triangle.normal, Vector3::Cross(edgeB, pointToSide)) < 0) return false;
+
+			Vector3 edgeC{ triangle.v0 - triangle.v2 };
+			pointToSide = intersectPoint - triangle.v2;
+			if (Vector3::Dot(triangle.normal, Vector3::Cross(edgeC, pointToSide)) < 0) return false;
+
+			hitRecord.didHit = true;
+			hitRecord.materialIndex = triangle.materialIndex;
+			hitRecord.origin = intersectPoint;
+			hitRecord.t = t;
+			hitRecord.normal = triangle.normal;
+			return true;
 		}
 
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray)
@@ -113,9 +163,39 @@ namespace dae
 #pragma region TriangeMesh HitTest
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo W5
-			assert(false && "No Implemented Yet!");
-			return false;
+			//HitTest_Triangle(const Triangle & triangle, const Ray & ray, HitRecord & hitRecord, bool ignoreHitRecord = false)
+
+			//Triangle(const Vector3& _v0, const Vector3& _v1, const Vector3& _v2, const Vector3& _normal)
+			
+			HitRecord hitRecordTestHit{};
+			//hitRecordClosestHit.t = ray.max;
+			int triangleAmount{ int(mesh.indices.size()) / 3 };
+
+			for (int i{}; i < triangleAmount; ++i)
+			{
+				int index1{ i * 3 }, index2{ i * 3 + 1 }, index3{ i * 3 + 2 };
+				
+				int v0{ mesh.indices[index1] };
+				int v1{ mesh.indices[index2] };
+				int v2{ mesh.indices[index3] };
+
+				Triangle triangle(mesh.transformedPositions[v0], mesh.transformedPositions[v1], mesh.transformedPositions[v2], mesh.transformedNormals[i]);
+				triangle.materialIndex = mesh.materialIndex;
+				triangle.cullMode = mesh.cullMode;
+				HitTest_Triangle(triangle, ray, hitRecordTestHit);
+				if (hitRecordTestHit.t < hitRecord.t)
+				{
+					hitRecord = hitRecordTestHit;
+				}
+			}
+			if (hitRecordTestHit.didHit)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray)
@@ -131,16 +211,16 @@ namespace dae
 		//Direction from target to light
 		inline Vector3 GetDirectionToLight(const Light& light, const Vector3 origin)
 		{
-			//todo W3
-			assert(false && "No Implemented Yet!");
-			return {};
+			Vector3 DirectionToLight{light.origin - origin};
+			return DirectionToLight;
 		}
 
 		inline ColorRGB GetRadiance(const Light& light, const Vector3& target)
 		{
-			//todo W3
-			assert(false && "No Implemented Yet!");
-			return {};
+			Vector3 vectorFromTargetToLight{ light.origin - target };
+			float radius{ vectorFromTargetToLight.SqrMagnitude() };
+
+			return light.color * (light.intensity / radius);
 		}
 	}
 

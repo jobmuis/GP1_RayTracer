@@ -145,5 +145,8 @@ namespace dae
 		static ColorRGB White{ 1,1,1 };
 		static ColorRGB Black{ 0,0,0 };
 		static ColorRGB Gray{ 0.5f,0.5f,0.5f };
+		static ColorRGB Orange{ 1.f,0.35f,0.01f };
+		static ColorRGB Pink{ 0.932f,0.428f,0.5f };
+		static ColorRGB GreyBlue{ 0.35f,0.38f,0.47f };
 	}
 }

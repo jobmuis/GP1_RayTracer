@@ -5,6 +5,7 @@
 
 #include "Math.h"
 #include "Timer.h"
+#include <iostream>
 
 namespace dae
 {
@@ -34,9 +35,17 @@ namespace dae
 
 		Matrix CalculateCameraToWorld()
 		{
-			//todo: W2
-			assert(false && "Not Implemented Yet");
-			return {};
+			Vector3 worldUp{ Vector3::UnitY };
+			//unity instead of worldUp
+			right = Vector3::Cross(worldUp, forward);
+			right.Normalize();
+			up = Vector3::Cross(forward, right);
+			up.Normalize();
+			//reverse camera
+			//forward.z = -1.f;
+
+			Matrix cameraONB{ right, up, forward, origin };
+			return cameraONB;
 		}
 
 		void Update(Timer* pTimer)
@@ -45,14 +54,43 @@ namespace dae
 
 			//Keyboard Input
 			const uint8_t* pKeyboardState = SDL_GetKeyboardState(nullptr);
+			const float moveSpeed{ 5.f };
+
+			if (pKeyboardState[SDL_SCANCODE_W])
+			{
+				origin += forward * moveSpeed * deltaTime;
+			}
+			if (pKeyboardState[SDL_SCANCODE_S])
+			{
+				origin -= forward * moveSpeed * deltaTime;
+			}
+			if (pKeyboardState[SDL_SCANCODE_A])
+			{
+				origin -= right * moveSpeed * deltaTime;
+			}
+			if (pKeyboardState[SDL_SCANCODE_D])
+			{
+				origin += right * moveSpeed * deltaTime;
+			}
 
 
 			//Mouse Input
 			int mouseX{}, mouseY{};
 			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
+			const float rotationSpeed{ 5.f };
 
-			//todo: W2
-			//assert(false && "Not Implemented Yet");
+			if (mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT))
+			{
+				totalPitch = -mouseY * rotationSpeed * deltaTime;
+				totalYaw = mouseX * rotationSpeed * deltaTime;
+			}
+
+			//std::cout << totalYaw << '\n';
+
+			Matrix finalRotation{ Matrix::CreateRotationY(totalYaw) * Matrix::CreateRotationX(totalPitch) };
+
+			forward = finalRotation.TransformVector(forward);
+			forward.Normalize();
 		}
 	};
 }

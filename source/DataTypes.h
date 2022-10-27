@@ -3,6 +3,7 @@
 
 #include "Math.h"
 #include "vector"
+#include <iostream>
 
 namespace dae
 {
@@ -123,20 +124,53 @@ namespace dae
 
 		void CalculateNormals()
 		{
-			assert(false && "No Implemented Yet!");
+			int triangleAmount{ int(indices.size()) / 3 };
+			//std::cout << triangleAmount << '\n';
+
+			for (int i{}; i < triangleAmount; ++i)
+			{
+				int index1{ i * 3 }, index2{ i * 3 + 1 }, index3{ i * 3 + 2 };
+				
+				int v0{ indices[index1] };
+				int v1{ indices[index2] };
+				int v2{ indices[index3]};
+
+				//Calculate two sides of triangle
+				Vector3 edgeA{ positions[v1] - positions[v0] }, edgeB{ positions[v2] - positions[v0] };
+				Vector3 normal{ Vector3::Cross(edgeA, edgeB) };
+				normal.Normalize();
+				normals.push_back(normal);
+			}
 		}
 
 		void UpdateTransforms()
 		{
-			assert(false && "No Implemented Yet!");
 			//Calculate Final Transform 
 			//const auto finalTransform = ...
+			const auto finalTransform = scaleTransform * rotationTransform * translationTransform;
+			transformedPositions.clear();
+			transformedNormals.clear();
 
 			//Transform Positions (positions > transformedPositions)
-			//...
+			transformedPositions.reserve(positions.size());
+			for (const Vector3& point : positions)
+			{
+				//std::cout << "point " << point.x << ' ' << point.y << ' ' << point.z << '\n';
+				Vector3 transformedPosition{ finalTransform.TransformPoint(point)};
+				//std::cout << "TransformedPoint " << transformedPosition.x << ' ' << transformedPosition.y << ' ' << transformedPosition.z << '\n';
+				transformedPositions.emplace_back(transformedPosition);
+			}
 
 			//Transform Normals (normals > transformedNormals)
-			//...
+			transformedNormals.reserve(normals.size());
+			for (const Vector3& normal : normals)
+			{
+				Vector3 transformedNormal{ finalTransform.TransformVector(normal) };
+				transformedNormals.emplace_back(transformedNormal);
+			}
+
+			//transformedPositions = positions;
+			//transformedNormals = normals;
 		}
 	};
 #pragma endregion
