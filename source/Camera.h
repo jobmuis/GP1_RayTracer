@@ -36,7 +36,6 @@ namespace dae
 		Matrix CalculateCameraToWorld()
 		{
 			Vector3 worldUp{ Vector3::UnitY };
-			//unity instead of worldUp
 			right = Vector3::Cross(worldUp, forward);
 			right.Normalize();
 			up = Vector3::Cross(forward, right);
@@ -44,8 +43,8 @@ namespace dae
 			//reverse camera
 			//forward.z = -1.f;
 
-			Matrix cameraONB{ right, up, forward, origin };
-			return cameraONB;
+			cameraToWorld = { right, up, forward, origin };
+			return cameraToWorld;
 		}
 
 		void Update(Timer* pTimer)
@@ -81,7 +80,7 @@ namespace dae
 
 			if (mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT))
 			{
-				totalPitch = -mouseY * rotationSpeed * deltaTime;
+				totalPitch = mouseY * rotationSpeed * deltaTime;
 				totalYaw = mouseX * rotationSpeed * deltaTime;
 			}
 

@@ -33,7 +33,7 @@ int main(int argc, char* args[])
 	const uint32_t height = 480;
 
 	SDL_Window* pWindow = SDL_CreateWindow(
-		"RayTracer - **Job Muis**",
+		"RayTracer - **Job Muis (2DAE07)**",
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
 		width, height, 0);
@@ -71,15 +71,18 @@ int main(int argc, char* args[])
 				isLooping = false;
 				break;
 			case SDL_KEYUP:
-				if(e.key.keysym.scancode == SDL_SCANCODE_X)
+				if (e.key.keysym.scancode == SDL_SCANCODE_X)
 					takeScreenshot = true;
+				else if (e.key.keysym.scancode == SDL_SCANCODE_F2)
+					pRenderer->ToggleShadows();
+				else if (e.key.keysym.scancode == SDL_SCANCODE_F3)
+					pRenderer->CycleLightingMode();
 				break;
 			}
 		}
 
 		//--------- Update ---------
 		pScene->Update(pTimer);
-		pRenderer->Update();
 
 		//--------- Render ---------
 		pRenderer->Render(pScene);

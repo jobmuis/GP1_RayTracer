@@ -433,16 +433,19 @@ namespace dae {
 		m_Meshes[0] = AddTriangleMesh(TriangleCullMode::BackFaceCulling, matLambert_White);
 		m_Meshes[0]->AppendTriangle(baseTriangle, true);
 		m_Meshes[0]->Translate({ -1.75f, 4.5f, 0.f });
+		m_Meshes[0]->UpdateAABB();
 		m_Meshes[0]->UpdateTransforms();
 
 		m_Meshes[1] = AddTriangleMesh(TriangleCullMode::FrontFaceCulling, matLambert_White);
 		m_Meshes[1]->AppendTriangle(baseTriangle, true);
 		m_Meshes[1]->Translate({ 0.f, 4.5f, 0.f });
+		m_Meshes[1]->UpdateAABB();
 		m_Meshes[1]->UpdateTransforms();
 
 		m_Meshes[2] = AddTriangleMesh(TriangleCullMode::NoCulling, matLambert_White);
 		m_Meshes[2]->AppendTriangle(baseTriangle, true);
 		m_Meshes[2]->Translate({ 1.75f, 4.5f, 0.f });
+		m_Meshes[2]->UpdateAABB();
 		m_Meshes[2]->UpdateTransforms();
 		
 		//Lights
@@ -489,11 +492,10 @@ namespace dae {
 		m_BunnyMesh->normals,
 		m_BunnyMesh->indices);
 
-	m_BunnyMesh->UpdateTransforms();
-
 	m_BunnyMesh->Scale({ 2.f, 2.f, 2.f });
 	m_BunnyMesh->RotateY(180.f);
 
+	m_BunnyMesh->UpdateAABB();
 	m_BunnyMesh->UpdateTransforms();
 
 	//Lights
